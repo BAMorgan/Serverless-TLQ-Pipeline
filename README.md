@@ -11,7 +11,7 @@ This project implements a Transform-Load-Query (TLQ) data pipeline using AWS Lam
 ---
 
 Made by:
-Brandon Morgan
-Aly Badr
-Shu-Ren Shen
+- Brandon Morgan
+- Aly Badr
+- Shu-Ren Shen
 
