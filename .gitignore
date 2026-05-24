@@ -1,0 +1,48 @@
+# IDEs
+.idea/
+*.iml
+
+# Java / Maven
+java/target/
+java/src/main/resources/db.properties
+*.class
+*.jar
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# AWS CDK / Node
+infrastructure/cdk/node_modules/
+infrastructure/cdk/cdk.out/
+infrastructure/cdk/cdk-outputs.json
+infrastructure/cdk/dist/
+infrastructure/cdk/*.js
+infrastructure/cdk/*.d.ts
+!infrastructure/cdk/jest.config.js
+
+# Local benchmark artifacts
+response.json
+pipeline_results.csv
+java_pipeline_metrics.csv
+summary_statistics.csv
+callservice_clean_metrics.csv
+callservice_clean_summary.csv
+benchmark_results/
+*.log
+*.zip
+
+# Large local datasets
+data/*.csv
+
+# Local environment and OS files
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

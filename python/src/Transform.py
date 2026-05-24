@@ -69,7 +69,7 @@ def lambda_handler(event, context):
     return response
 
 
-def transform(file_path):
+def transform(file_path, output_path=None):
     """
     Transform the CSV file:
     - Add Order Processing Time
@@ -79,13 +79,17 @@ def transform(file_path):
     """
     transformed_rows = []
     seen_order_ids = set()
+    duplicate_rows = 0
+    fieldnames = []
 
     # Read the input CSV file
     with open(file_path, newline='', mode='r') as csvfile:
         reader = csv.DictReader(csvfile)
+        fieldnames = reader.fieldnames or []
         for row in reader:
             # Skip duplicates
             if row['Order ID'] in seen_order_ids:
+                duplicate_rows += 1
                 continue
 
             # Mark Order ID as seen
@@ -109,10 +113,12 @@ def transform(file_path):
             transformed_rows.append(row)
 
     # Save the transformed data to a new CSV file in /tmp
-    transformed_file_path = '/tmp/transformed_' + os.path.basename(file_path)
+    transformed_file_path = output_path or '/tmp/transformed_' + os.path.basename(file_path)
     with open(transformed_file_path, mode='w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=reader.fieldnames + ['Order Processing Time', 'Gross Margin'])
+        writer = csv.DictWriter(f, fieldnames=fieldnames + ['Order Processing Time', 'Gross Margin'])
         writer.writeheader()
         writer.writerows(transformed_rows)
 
+    if output_path:
+        return len(transformed_rows), duplicate_rows
     return transformed_file_path

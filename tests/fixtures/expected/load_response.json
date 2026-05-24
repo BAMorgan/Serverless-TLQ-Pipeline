@@ -1,0 +1,7 @@
+{
+  "statusCode": 200,
+  "message": "Database created and uploaded successfully",
+  "bucket_name": "example-pipeline-bucket",
+  "s3_key": "databases/example.db",
+  "rows_inserted": 3
+}

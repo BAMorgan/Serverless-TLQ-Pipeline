@@ -13,6 +13,63 @@ logger.setLevel(logging.INFO)
 # Initialize S3 client
 s3_client = boto3.client('s3')
 
+def create_database(csv_path, db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    create_table_query = '''
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Region TEXT,
+            Country TEXT,
+            ItemType TEXT,
+            SalesChannel TEXT,
+            OrderPriority TEXT,
+            OrderDate TEXT,
+            OrderID INTEGER,
+            ShipDate TEXT,
+            UnitsSold INTEGER,
+            UnitPrice REAL,
+            UnitCost REAL,
+            TotalRevenue REAL,
+            TotalCost REAL,
+            TotalProfit REAL,
+            OrderProcessingTime INTEGER,
+            GrossMargin REAL
+        );
+    '''
+    cursor.execute(create_table_query)
+    conn.commit()
+
+    insert_query = '''
+        INSERT INTO orders (
+            Region, Country, ItemType, SalesChannel, OrderPriority,
+            OrderDate, OrderID, ShipDate, UnitsSold, UnitPrice,
+            UnitCost, TotalRevenue, TotalCost, TotalProfit,
+            OrderProcessingTime, GrossMargin
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    '''
+
+    rows_inserted = 0
+    with open(csv_path, newline='', mode='r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        data_to_insert = [
+            (
+                row['Region'], row['Country'], row['Item Type'], row['Sales Channel'], row['Order Priority'],
+                row['Order Date'], int(row['Order ID']), row['Ship Date'], int(row['Units Sold']), float(row['Unit Price']),
+                float(row['Unit Cost']), float(row['Total Revenue']), float(row['Total Cost']), float(row['Total Profit']),
+                int(row['Order Processing Time']), float(row['Gross Margin'])
+            ) for row in reader
+        ]
+    if data_to_insert:
+        cursor.executemany(insert_query, data_to_insert)
+        rows_inserted = len(data_to_insert)
+
+    conn.commit()
+    conn.close()
+    return rows_inserted
+
 def lambda_handler(event, context):
     inspector = Inspector()
     inspector.inspectAll()  # Start collecting runtime and system metrics
@@ -38,59 +95,9 @@ def lambda_handler(event, context):
         s3_client.download_file(bucket_name, csv_file_key, local_csv_path)
         logger.info(f"CSV file downloaded successfully to {local_csv_path}")
 
-        # Check if the SQLite database exists; if not, create it
-        conn = sqlite3.connect(local_db_path)
-        cursor = conn.cursor()
-
-        # Create a table if it doesn't exist
-        create_table_query = '''
-            CREATE TABLE IF NOT EXISTS orders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Region TEXT,
-                Country TEXT,
-                ItemType TEXT,
-                SalesChannel TEXT,
-                OrderPriority TEXT,
-                OrderDate TEXT,
-                OrderID INTEGER,
-                ShipDate TEXT,
-                UnitsSold INTEGER,
-                UnitPrice REAL,
-                UnitCost REAL,
-                TotalRevenue REAL,
-                TotalCost REAL,
-                TotalProfit REAL,
-                OrderProcessingTime INTEGER,
-                GrossMargin REAL
-            );
-        '''
-        cursor.execute(create_table_query)
-        conn.commit()
-
         # Read and insert CSV data into the SQLite database
         logger.info(f"Reading CSV file and inserting data into SQLite database: {local_db_path}")
-        with open(local_csv_path, newline='', mode='r') as csvfile:
-            reader = csv.DictReader(csvfile)
-            insert_query = '''
-                INSERT INTO orders (
-                    Region, Country, ItemType, SalesChannel, OrderPriority,
-                    OrderDate, OrderID, ShipDate, UnitsSold, UnitPrice,
-                    UnitCost, TotalRevenue, TotalCost, TotalProfit,
-                    OrderProcessingTime, GrossMargin
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            '''
-            data_to_insert = [
-                (
-                    row['Region'], row['Country'], row['Item Type'], row['Sales Channel'], row['Order Priority'],
-                    row['Order Date'], int(row['Order ID']), row['Ship Date'], int(row['Units Sold']), float(row['Unit Price']),
-                    float(row['Unit Cost']), float(row['Total Revenue']), float(row['Total Cost']), float(row['Total Profit']),
-                    int(row['Order Processing Time']), float(row['Gross Margin'])
-                ) for row in reader
-            ]
-            cursor.executemany(insert_query, data_to_insert)
-        conn.commit()
-        conn.close()
+        create_database(local_csv_path, local_db_path)
         logger.info(f"Data inserted successfully into SQLite database.")
 
         # Upload the SQLite database to S3

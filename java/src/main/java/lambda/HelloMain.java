@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import saaf.Inspector;
 import saaf.Response;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 /**
@@ -109,6 +110,11 @@ public class HelloMain implements RequestHandler<HashMap<String, Object>, HashMa
                     @Override
                     public void log(String string) {
                         System.out.println("LOG:" + string);
+                    }
+
+                    @Override
+                    public void log(byte[] bytes) {
+                        System.out.println("LOG:" + new String(bytes, StandardCharsets.UTF_8));
                     }
                 };
             }

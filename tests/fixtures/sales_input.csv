@@ -1,0 +1,5 @@
+Region,Country,Item Type,Sales Channel,Order Priority,Order Date,Order ID,Ship Date,Units Sold,Unit Price,Unit Cost,Total Revenue,Total Cost,Total Profit
+Sub-Saharan Africa,Kenya,Cereal,Online,H,1/1/2020,1001,1/11/2020,10,20.00,12.00,200.00,120.00,80.00
+Europe,France,Cosmetics,Offline,C,2/1/2020,1002,2/3/2020,5,10.00,4.00,50.00,20.00,30.00
+Europe,France,Cosmetics,Offline,C,2/1/2020,1002,2/3/2020,5,10.00,4.00,50.00,20.00,30.00
+Asia,Japan,Snacks,Online,L,3/10/2020,1003,3/20/2020,8,5.00,3.00,40.00,24.00,16.00

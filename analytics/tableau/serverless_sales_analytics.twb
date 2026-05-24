@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<workbook source-build='portfolio-generated' source-platform='win' version='18.1'>
+  <preferences />
+  <datasources>
+    <datasource caption="Sales KPI Overview" inline="true" name="sales_kpis" version="18.1">
+      <connection class="textscan" directory="Data" filename="sales_kpis.csv" password="" server="" />
+    </datasource>
+    <datasource caption="Regional Performance" inline="true" name="regional_performance" version="18.1">
+      <connection class="textscan" directory="Data" filename="regional_performance.csv" password="" server="" />
+    </datasource>
+    <datasource caption="Operations Analysis" inline="true" name="operations_processing_time" version="18.1">
+      <connection class="textscan" directory="Data" filename="operations_processing_time.csv" password="" server="" />
+    </datasource>
+    <datasource caption="Lambda Benchmark Analysis" inline="true" name="lambda_benchmark_summary" version="18.1">
+      <connection class="textscan" directory="Data" filename="lambda_benchmark_summary.csv" password="" server="" />
+    </datasource>
+    <datasource caption="Optimization Story" inline="true" name="optimization_story" version="18.1">
+      <connection class="textscan" directory="Data" filename="optimization_story.csv" password="" server="" />
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name="Sales KPI Overview">
+      <table>
+        <view>
+          <datasources>
+            <datasource caption="Sales KPI Overview" name="sales_kpis" />
+          </datasources>
+        </view>
+      </table>
+    </worksheet>
+    <worksheet name="Regional Performance">
+      <table>
+        <view>
+          <datasources>
+            <datasource caption="Regional Performance" name="regional_performance" />
+          </datasources>
+        </view>
+      </table>
+    </worksheet>
+    <worksheet name="Operations Analysis">
+      <table>
+        <view>
+          <datasources>
+            <datasource caption="Operations Analysis" name="operations_processing_time" />
+          </datasources>
+        </view>
+      </table>
+    </worksheet>
+    <worksheet name="Lambda Benchmark Analysis">
+      <table>
+        <view>
+          <datasources>
+            <datasource caption="Lambda Benchmark Analysis" name="lambda_benchmark_summary" />
+          </datasources>
+        </view>
+      </table>
+    </worksheet>
+    <worksheet name="Optimization Story">
+      <table>
+        <view>
+          <datasources>
+            <datasource caption="Optimization Story" name="optimization_story" />
+          </datasources>
+        </view>
+      </table>
+    </worksheet>
+  </worksheets>
+  <dashboards>
+    <dashboard name="Serverless Sales Analytics Pipeline">
+      <style />
+      <zones />
+    </dashboard>
+  </dashboards>
+</workbook>

@@ -1,0 +1,5 @@
+stage,detail,metric
+Baseline constraint,Original Python 1.5M-row transform timed out at 900 seconds under 256 MB.,Timeout
+Optimized Java pipeline,Primitive duplicate tracking and batched SQLite writes completed the 1.5M-row run.,539.021s
+Optimized Python pipeline,Streaming transform and batched load completed fastest in the verified run.,224.475s
+Final comparison,Python finished faster than Java for the current 1.5M-row implementation.,2.40x Java/Python runtime

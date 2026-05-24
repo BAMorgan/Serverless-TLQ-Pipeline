@@ -21,6 +21,13 @@ public class Query implements RequestHandler<Map<String, Object>, Map<String, Ob
     private static final Logger logger = Logger.getLogger(Query.class.getName());
     private static final String LOCAL_DB_PATH = "/tmp/data.db";
     private static final int BUFFER_SIZE = 8192;
+    private static final Map<String, String> FILTER_COLUMNS = Map.of(
+            "Region", "Region",
+            "Country", "Country",
+            "Item Type", "ItemType",
+            "Sales Channel", "SalesChannel",
+            "Order Priority", "OrderPriority"
+    );
 
     static {
         try {
@@ -58,7 +65,7 @@ public class Query implements RequestHandler<Map<String, Object>, Map<String, Ob
             downloadDatabase(bucketName, dbKey);
 
             // Process queries and get results
-            Map<String, Object> results = processQueries(event);
+            Map<String, Object> results = processQueries(event, LOCAL_DB_PATH);
 
             // Set successful response with results
             response.setValue(results.toString());
@@ -92,41 +99,49 @@ public class Query implements RequestHandler<Map<String, Object>, Map<String, Ob
         }
     }
 
-    private Map<String, Object> processQueries(Map<String, Object> event) throws SQLException {
-        Map<String, Object> results = new HashMap<>();
+    Map<String, Object> processQueries(Map<String, Object> event, String dbPath) throws SQLException {
+        Map<String, Object> response = new LinkedHashMap<>();
+        List<Map<String, Object>> results = new ArrayList<>();
+        boolean includeResults = false;
 
-        try (Connection conn = getOptimizedConnection()) {
+        try (Connection conn = getOptimizedConnection(dbPath)) {
             @SuppressWarnings("unchecked")
             Map<String, String> filters = (Map<String, String>) event.getOrDefault("Filters", new HashMap<>());
             @SuppressWarnings("unchecked")
             List<String> groupBy = (List<String>) event.getOrDefault("Group By", new ArrayList<>());
 
-            String sql = buildAggregationQuery(filters, groupBy);
-            logger.info("Executing query: " + sql);
+            QueryPlan plan = buildAggregationQuery(filters, groupBy);
+            includeResults = !plan.groupColumns().isEmpty();
+            logger.info("Executing query: " + plan.sql());
 
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                setQueryParameters(stmt, filters);
+            try (PreparedStatement stmt = conn.prepareStatement(plan.sql())) {
+                setQueryParameters(stmt, plan.params());
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        results.putAll(extractAggregations(rs, groupBy));
+                        results.add(extractAggregations(rs, plan.groupColumns()));
                     }
                 }
             }
         }
 
-        return results;
+        response.put("statusCode", 200);
+        response.put("aggregations", results.isEmpty() ? new LinkedHashMap<>() : results.get(0));
+        if (includeResults) {
+            response.put("results", results);
+        }
+        return response;
     }
 
-    private void setQueryParameters(PreparedStatement stmt, Map<String, String> filters) throws SQLException {
+    private void setQueryParameters(PreparedStatement stmt, List<String> params) throws SQLException {
         int paramIndex = 1;
-        for (String value : filters.values()) {
+        for (String value : params) {
             stmt.setString(paramIndex++, value);
         }
     }
 
-    private Connection getOptimizedConnection() throws SQLException {
-        Connection conn = DriverManager.getConnection("jdbc:sqlite:" + LOCAL_DB_PATH);
+    private Connection getOptimizedConnection(String dbPath) throws SQLException {
+        Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA journal_mode = WAL");
             stmt.execute("PRAGMA synchronous = NORMAL");
@@ -136,66 +151,70 @@ public class Query implements RequestHandler<Map<String, Object>, Map<String, Ob
         return conn;
     }
 
-    private String buildAggregationQuery(Map<String, String> filters, List<String> groupBy) {
+    record QueryPlan(String sql, List<String> params, List<String> groupColumns) {}
+
+    static QueryPlan buildAggregationQuery(Map<String, String> filters, List<String> groupBy) {
         StringBuilder sql = new StringBuilder();
+        List<String> params = new ArrayList<>();
+        List<String> groupColumns = dedupeGroupColumns(groupBy);
 
         // Select clause with proper type handling
         sql.append("""
             SELECT 
-                CAST(ROUND(AVG(CAST(OrderProcessingTime AS REAL)), 2) AS TEXT) AS AvgOrderProcessingTime,
-                CAST(ROUND(AVG(CAST(GrossMargin AS REAL)), 4) AS TEXT) AS AvgGrossMargin,
-                CAST(ROUND(AVG(CAST(UnitsSold AS REAL)), 2) AS TEXT) AS AvgUnitsSold,
-                CAST(MAX(UnitsSold) AS TEXT) AS MaxUnitsSold,
-                CAST(MIN(UnitsSold) AS TEXT) AS MinUnitsSold,
-                CAST(SUM(UnitsSold) AS TEXT) AS TotalUnitsSold,
-                CAST(ROUND(SUM(TotalRevenue), 2) AS TEXT) AS TotalRevenue,
-                CAST(ROUND(SUM(TotalProfit), 2) AS TEXT) AS TotalProfit,
-                CAST(COUNT(DISTINCT OrderID) AS TEXT) AS NumberOfOrders
+                ROUND(AVG(CAST(OrderProcessingTime AS REAL)), 2) AS AvgOrderProcessingTime,
+                ROUND(AVG(CAST(GrossMargin AS REAL)), 4) AS AvgGrossMargin,
+                ROUND(AVG(CAST(UnitsSold AS REAL)), 2) AS AvgUnitsSold,
+                MAX(UnitsSold) AS MaxUnitsSold,
+                MIN(UnitsSold) AS MinUnitsSold,
+                SUM(UnitsSold) AS TotalUnitsSold,
+                ROUND(SUM(TotalRevenue), 2) AS TotalRevenue,
+                ROUND(SUM(TotalProfit), 2) AS TotalProfit,
+                COUNT(DISTINCT OrderID) AS NumberOfOrders
         """);
 
         // Add grouping columns if present
-        if (!groupBy.isEmpty()) {
-            sql.append(", ").append(String.join(", ", groupBy));
+        if (!groupColumns.isEmpty()) {
+            sql.append(", ").append(String.join(", ", groupColumns));
         }
 
         sql.append(" FROM orders");
 
         // Add WHERE clause if filters exist
         if (!filters.isEmpty()) {
-            sql.append(" WHERE ")
-                    .append(String.join(" AND ",
-                            filters.keySet().stream()
-                                    .map(key -> sanitizeColumnName(key) + " = ?")
-                                    .toList()
-                    ));
+            List<String> whereClauses = new ArrayList<>();
+            for (Map.Entry<String, String> entry : filters.entrySet()) {
+                String mappedColumn = FILTER_COLUMNS.get(entry.getKey());
+                if (mappedColumn == null) {
+                    throw new IllegalArgumentException("Unsupported filter column: " + entry.getKey());
+                }
+                whereClauses.add(mappedColumn + " = ?");
+                params.add(entry.getValue());
+            }
+            sql.append(" WHERE ").append(String.join(" AND ", whereClauses));
         }
 
         // Add GROUP BY clause if grouping fields exist
-        if (!groupBy.isEmpty()) {
-            sql.append(" GROUP BY ")
-                    .append(String.join(", ",
-                            groupBy.stream()
-                                    .map(this::sanitizeColumnName)
-                                    .toList()
-                    ));
+        if (!groupColumns.isEmpty()) {
+            sql.append(" GROUP BY ").append(String.join(", ", groupColumns));
+            sql.append(" ORDER BY ").append(String.join(", ", groupColumns));
         }
 
-        return sql.toString();
+        return new QueryPlan(sql.toString(), params, groupColumns);
     }
 
     private Map<String, Object> extractAggregations(ResultSet rs, List<String> groupBy) throws SQLException {
-        Map<String, Object> row = new HashMap<>();
+        Map<String, Object> row = new LinkedHashMap<>();
 
         // Extract metrics
-        row.put("Average Order Processing Time in days", rs.getString("AvgOrderProcessingTime"));
-        row.put("Average Gross Margin", rs.getString("AvgGrossMargin"));
-        row.put("Average Units Sold", rs.getString("AvgUnitsSold"));
-        row.put("Max Units Sold", rs.getString("MaxUnitsSold"));
-        row.put("Min Units Sold", rs.getString("MinUnitsSold"));
-        row.put("Total Units Sold", rs.getString("TotalUnitsSold"));
-        row.put("Total Revenue", rs.getString("TotalRevenue"));
-        row.put("Total Profit", rs.getString("TotalProfit"));
-        row.put("Number of Orders", rs.getString("NumberOfOrders"));
+        row.put("Average Order Processing Time in days", rs.getDouble("AvgOrderProcessingTime"));
+        row.put("Average Gross Margin", rs.getDouble("AvgGrossMargin"));
+        row.put("Average Units Sold", rs.getDouble("AvgUnitsSold"));
+        row.put("Max Units Sold", rs.getInt("MaxUnitsSold"));
+        row.put("Min Units Sold", rs.getInt("MinUnitsSold"));
+        row.put("Total Units Sold", rs.getInt("TotalUnitsSold"));
+        row.put("Total Revenue", rs.getDouble("TotalRevenue"));
+        row.put("Total Profit", rs.getDouble("TotalProfit"));
+        row.put("Number of Orders", rs.getInt("NumberOfOrders"));
 
         // Extract grouping columns if present
         for (String column : groupBy) {
@@ -205,8 +224,16 @@ public class Query implements RequestHandler<Map<String, Object>, Map<String, Ob
         return row;
     }
 
-    private String sanitizeColumnName(String columnName) {
-        return columnName.replaceAll("[^a-zA-Z0-9_]", "");
+    private static List<String> dedupeGroupColumns(List<String> groupBy) {
+        Set<String> seen = new LinkedHashSet<>();
+        for (String column : groupBy) {
+            String mappedColumn = FILTER_COLUMNS.get(column);
+            if (mappedColumn == null) {
+                throw new IllegalArgumentException("Unsupported group by column: " + column);
+            }
+            seen.add(mappedColumn);
+        }
+        return new ArrayList<>(seen);
     }
 
     private void cleanup() {

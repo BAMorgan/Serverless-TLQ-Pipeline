@@ -1,0 +1,41 @@
+{
+  "statusCode": 200,
+  "aggregations": {
+    "Average Order Processing Time in days": 10.0,
+    "Average Gross Margin": 0.4,
+    "Average Units Sold": 8.0,
+    "Max Units Sold": 8,
+    "Min Units Sold": 8,
+    "Total Units Sold": 8,
+    "Total Revenue": 40.0,
+    "Total Profit": 16.0,
+    "Number of Orders": 1,
+    "Region": "Asia"
+  },
+  "results": [
+    {
+      "Average Order Processing Time in days": 10.0,
+      "Average Gross Margin": 0.4,
+      "Average Units Sold": 8.0,
+      "Max Units Sold": 8,
+      "Min Units Sold": 8,
+      "Total Units Sold": 8,
+      "Total Revenue": 40.0,
+      "Total Profit": 16.0,
+      "Number of Orders": 1,
+      "Region": "Asia"
+    },
+    {
+      "Average Order Processing Time in days": 10.0,
+      "Average Gross Margin": 0.4,
+      "Average Units Sold": 10.0,
+      "Max Units Sold": 10,
+      "Min Units Sold": 10,
+      "Total Units Sold": 10,
+      "Total Revenue": 200.0,
+      "Total Profit": 80.0,
+      "Number of Orders": 1,
+      "Region": "Sub-Saharan Africa"
+    }
+  ]
+}

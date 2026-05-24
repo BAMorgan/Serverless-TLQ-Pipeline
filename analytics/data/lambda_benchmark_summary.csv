@@ -1,0 +1,9 @@
+language,scope,dataset_rows,runs,mean_runtime_seconds,mean_throughput_rows_per_second,estimated_cost_per_100k_usd
+java,transform,1500000,1,210.03,7141.84,87.532675
+java,load,1500000,1,239.651,6259.1,99.874783
+java,query,1500000,1,89.34,16789.79,37.245074
+java,pipeline_total,1500000,1,539.021,2782.82,224.652533
+python,transform,1500000,1,103.624,14475.41,43.196753
+python,load,1500000,1,102.385,14650.58,42.680502
+python,query,1500000,1,18.466,81230.37,7.714182
+python,pipeline_total,1500000,1,224.475,6682.26,93.591437

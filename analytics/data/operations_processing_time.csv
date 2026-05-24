@@ -1,0 +1,207 @@
+dimension_type,dimension,orders,average_processing_days
+Region,Asia,14547,25.06
+Region,Australia and Oceania,8113,25.14
+Region,Central America and the Caribbean,10731,24.88
+Region,Europe,25877,24.97
+Region,Middle East and North Africa,12580,25.24
+Region,North America,2133,24.84
+Region,Sub-Saharan Africa,26019,25.04
+Country,Afghanistan,551,25.21
+Country,Albania,521,25.92
+Country,Algeria,520,24.49
+Country,Andorra,535,26.17
+Country,Angola,489,25.26
+Country,Antigua and Barbuda ,515,24.97
+Country,Armenia,527,25.65
+Country,Australia,558,24.6
+Country,Austria,521,25.2
+Country,Azerbaijan,551,25.84
+Country,Bahrain,556,24.5
+Country,Bangladesh,545,24.47
+Country,Barbados,510,24.62
+Country,Belarus,539,25.15
+Country,Belgium,540,24.32
+Country,Belize,528,24.11
+Country,Benin,539,24.32
+Country,Bhutan,534,25.34
+Country,Bosnia and Herzegovina,558,25.01
+Country,Botswana,559,25.06
+Country,Brunei,558,25.02
+Country,Bulgaria,569,25.09
+Country,Burkina Faso,522,25.09
+Country,Burundi,546,24.8
+Country,Cambodia,584,24.67
+Country,Cameroon,531,24.39
+Country,Canada,546,24.09
+Country,Cape Verde,547,24.54
+Country,Central African Republic,535,24.52
+Country,Chad,524,25.73
+Country,China,554,25.07
+Country,Comoros,526,24.65
+Country,Costa Rica,556,24.6
+Country,Cote d'Ivoire,575,25.16
+Country,Croatia,556,25.87
+Country,Cuba,540,24.46
+Country,Cyprus,533,24.84
+Country,Czech Republic,554,24.68
+Country,Democratic Republic of the Congo,512,25.72
+Country,Denmark,529,24.89
+Country,Djibouti,539,25.0
+Country,Dominica,538,24.49
+Country,Dominican Republic,518,24.18
+Country,East Timor,557,24.58
+Country,Egypt,548,24.04
+Country,El Salvador,560,25.14
+Country,Equatorial Guinea,545,25.19
+Country,Eritrea,537,24.24
+Country,Estonia,558,24.35
+Country,Ethiopia,554,25.37
+Country,Federated States of Micronesia,574,26.29
+Country,Fiji,531,25.62
+Country,Finland,548,25.81
+Country,France,548,25.17
+Country,Gabon,534,25.95
+Country,Georgia,520,25.0
+Country,Germany,507,24.4
+Country,Ghana,500,26.11
+Country,Greece,530,24.95
+Country,Greenland,569,25.6
+Country,Grenada,558,25.09
+Country,Guatemala,554,25.52
+Country,Guinea,552,24.81
+Country,Guinea-Bissau,545,24.41
+Country,Haiti,573,24.28
+Country,Honduras,521,24.93
+Country,Hungary,570,24.6
+Country,Iceland,514,24.54
+Country,India,540,24.85
+Country,Indonesia,561,25.64
+Country,Iran,531,25.1
+Country,Iraq,555,25.42
+Country,Ireland,547,24.97
+Country,Israel,565,25.19
+Country,Italy,517,24.41
+Country,Jamaica,494,25.7
+Country,Japan,560,23.84
+Country,Jordan,554,26.26
+Country,Kazakhstan,533,25.39
+Country,Kenya,514,25.67
+Country,Kiribati,505,24.47
+Country,Kosovo,546,25.09
+Country,Kuwait,519,25.32
+Country,Kyrgyzstan,525,25.59
+Country,Laos,554,25.82
+Country,Latvia,553,25.03
+Country,Lebanon,529,26.02
+Country,Lesotho,527,24.71
+Country,Liberia,572,25.09
+Country,Libya,541,26.09
+Country,Liechtenstein,531,25.09
+Country,Lithuania,549,24.5
+Country,Luxembourg,526,24.93
+Country,Macedonia,567,24.62
+Country,Madagascar,540,24.96
+Country,Malawi,537,25.56
+Country,Malaysia,507,24.48
+Country,Maldives,545,24.37
+Country,Mali,538,24.93
+Country,Malta,589,24.98
+Country,Marshall Islands,542,24.5
+Country,Mauritania,533,24.66
+Country,Mauritius ,551,25.5
+Country,Mexico,512,24.08
+Country,Moldova ,530,25.0
+Country,Monaco,524,24.91
+Country,Mongolia,523,25.59
+Country,Montenegro,545,25.42
+Country,Morocco,558,25.82
+Country,Mozambique,589,25.28
+Country,Myanmar,535,25.37
+Country,Namibia,570,25.37
+Country,Nauru,529,24.43
+Country,Nepal,538,25.62
+Country,Netherlands,525,24.09
+Country,New Zealand,593,25.31
+Country,Nicaragua,507,26.06
+Country,Niger,542,25.06
+Country,Nigeria,499,25.1
+Country,North Korea,535,25.08
+Country,Norway,534,26.04
+Country,Oman,532,24.26
+Country,Pakistan,549,26.41
+Country,Palau,504,24.13
+Country,Panama,578,24.99
+Country,Papua New Guinea,547,24.52
+Country,Philippines,512,24.38
+Country,Poland,529,24.72
+Country,Portugal,546,24.13
+Country,Qatar,538,24.72
+Country,Republic of the Congo,536,25.14
+Country,Romania,547,24.29
+Country,Russia,521,25.33
+Country,Rwanda,576,24.14
+Country,Saint Kitts and Nevis ,554,25.36
+Country,Saint Lucia,514,25.15
+Country,Saint Vincent and the Grenadines,573,24.25
+Country,Samoa ,555,25.62
+Country,San Marino,540,24.59
+Country,Sao Tome and Principe,573,24.27
+Country,Saudi Arabia,529,24.83
+Country,Senegal,547,25.19
+Country,Serbia,537,25.37
+Country,Seychelles ,561,24.84
+Country,Sierra Leone,538,25.0
+Country,Singapore,548,24.7
+Country,Slovakia,556,24.59
+Country,Slovenia,522,24.79
+Country,Solomon Islands,526,25.29
+Country,Somalia,535,24.68
+Country,South Africa,575,24.87
+Country,South Korea,569,24.88
+Country,South Sudan,543,25.69
+Country,Spain,548,25.23
+Country,Sri Lanka,529,25.07
+Country,Sudan,623,25.46
+Country,Swaziland,536,24.74
+Country,Sweden,529,24.38
+Country,Switzerland,504,24.44
+Country,Syria,568,25.11
+Country,Taiwan,518,24.48
+Country,Tajikistan,534,25.75
+Country,Tanzania,549,24.85
+Country,Thailand,521,25.58
+Country,The Bahamas,517,25.47
+Country,The Gambia,513,25.92
+Country,Togo,523,25.47
+Country,Tonga,529,25.48
+Country,Trinidad and Tobago,523,24.29
+Country,Tunisia ,584,25.42
+Country,Turkey,541,25.58
+Country,Turkmenistan,553,25.4
+Country,Tuvalu,531,26.56
+Country,Uganda,554,24.27
+Country,Ukraine,531,24.86
+Country,United Arab Emirates,555,24.71
+Country,United Kingdom,517,25.75
+Country,United States of America,506,25.58
+Country,Uzbekistan,508,24.98
+Country,Vanuatu,532,25.55
+Country,Vatican City,590,25.22
+Country,Vietnam,524,25.15
+Country,Yemen,571,25.44
+Country,Zambia,541,25.66
+Country,Zimbabwe,508,24.52
+Item Type,Baby Food,8407,25.07
+Item Type,Beverages,8258,24.97
+Item Type,Cereal,8421,24.76
+Item Type,Clothes,8304,25.08
+Item Type,Cosmetics,8370,25.06
+Item Type,Fruits,8262,24.97
+Item Type,Household,8278,25.19
+Item Type,Meat,8320,25.03
+Item Type,Office Supplies,8426,25.23
+Item Type,Personal Care,8364,24.95
+Item Type,Snacks,8308,25.02
+Item Type,Vegetables,8282,25.1
+Sales Channel,Offline,49946,24.98
+Sales Channel,Online,50054,25.09

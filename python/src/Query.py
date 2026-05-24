@@ -13,6 +13,82 @@ s3_client = boto3.client('s3')
 
 # Path for the SQLite database in Lambda's local storage
 LOCAL_DB_PATH = "/tmp/data.db"
+
+FILTER_COLUMNS = {
+    "Region": "Region",
+    "Country": "Country",
+    "Item Type": "ItemType",
+    "Sales Channel": "SalesChannel",
+    "Order Priority": "OrderPriority",
+}
+
+
+def _dedupe_group_columns(group_by):
+    seen = set()
+    group_columns = []
+    for column in group_by or []:
+        if column not in FILTER_COLUMNS:
+            raise ValueError(f"Unsupported group by column: {column}")
+        db_column = FILTER_COLUMNS[column]
+        if db_column not in seen:
+            seen.add(db_column)
+            group_columns.append(db_column)
+    return group_columns
+
+
+def build_aggregation_query(filters=None, group_by=None):
+    filters = filters or {}
+    group_columns = _dedupe_group_columns(group_by or [])
+
+    select_columns = [
+        "ROUND(AVG(OrderProcessingTime), 2) AS AvgOrderProcessingTime",
+        "ROUND(AVG(GrossMargin), 4) AS AvgGrossMargin",
+        "ROUND(AVG(CAST(UnitsSold AS FLOAT)), 2) AS AvgUnitsSold",
+        "MAX(CAST(UnitsSold AS INTEGER)) AS MaxUnitsSold",
+        "MIN(CAST(UnitsSold AS INTEGER)) AS MinUnitsSold",
+        "SUM(CAST(UnitsSold AS INTEGER)) AS TotalUnitsSold",
+        "ROUND(SUM(TotalRevenue), 2) AS TotalRevenue",
+        "ROUND(SUM(TotalProfit), 2) AS TotalProfit",
+        "COUNT(DISTINCT OrderID) AS NumberOfOrders",
+    ]
+    select_columns.extend(group_columns)
+
+    query = f"SELECT {', '.join(select_columns)} FROM orders"
+    where_clauses = []
+    params = []
+    for column, value in filters.items():
+        if column not in FILTER_COLUMNS:
+            raise ValueError(f"Unsupported filter column: {column}")
+        where_clauses.append(f"{FILTER_COLUMNS[column]} = ?")
+        params.append(value)
+
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+    if group_columns:
+        query += " GROUP BY " + ", ".join(group_columns)
+        query += " ORDER BY " + ", ".join(group_columns)
+
+    return query, params, group_columns
+
+
+def format_aggregation(row, group_columns=None):
+    group_columns = group_columns or []
+    aggregation = {
+        "Average Order Processing Time in days": row["AvgOrderProcessingTime"],
+        "Average Gross Margin": row["AvgGrossMargin"],
+        "Average Units Sold": row["AvgUnitsSold"],
+        "Max Units Sold": row["MaxUnitsSold"],
+        "Min Units Sold": row["MinUnitsSold"],
+        "Total Units Sold": row["TotalUnitsSold"],
+        "Total Revenue": row["TotalRevenue"],
+        "Total Profit": row["TotalProfit"],
+        "Number of Orders": int(row["NumberOfOrders"]),
+    }
+    for column in group_columns:
+        aggregation[column] = row[column]
+    return aggregation
+
+
 def lambda_handler(event, context):
     inspector = Inspector()
     inspector.inspectAll()  # Start collecting runtime and system metrics
@@ -37,78 +113,15 @@ def lambda_handler(event, context):
         filters = event.get("Filters", {})
         group_by = event.get("Group By", [])
 
-        # Open SQLite database connection
-        conn = sqlite3.connect(LOCAL_DB_PATH)
-        cursor = conn.cursor()
-
-        # Base queries for aggregation and filters
-        sql_query_agg = '''
-            SELECT 
-                AVG(OrderProcessingTime) AS AvgOrderProcessingTime, 
-                AVG(GrossMargin) AS AvgGrossMargin,
-                AVG(CAST(UnitsSold AS FLOAT)) AS AvgUnitsSold,
-                MAX(CAST(UnitsSold AS INTEGER)) AS MaxUnitsSold,
-                MIN(CAST(UnitsSold AS INTEGER)) AS MinUnitsSold,
-                SUM(CAST(UnitsSold AS INTEGER)) AS TotalUnitsSold,
-                SUM(TotalRevenue) AS TotalRevenue,
-                SUM(TotalProfit) AS TotalProfit,
-                COUNT(DISTINCT OrderID) AS NumberOfOrders
-            FROM 
-                orders
-        '''
-        sql_query_filters = 'SELECT * FROM orders'
-
-        # Dynamically build WHERE clause based on filters
-        query_filters = []
-        if filters.get("Region"):
-            query_filters.append(f"Region = '{filters['Region']}'")
-        if filters.get("Item Type"):
-            query_filters.append(f"ItemType = '{filters['Item Type']}'")
-        if filters.get("Sales Channel"):
-            query_filters.append(f"SalesChannel = '{filters['Sales Channel']}'")
-        if filters.get("Order Priority"):
-            query_filters.append(f"OrderPriority = '{filters['Order Priority']}'")
-        if filters.get("Country"):
-            query_filters.append(f"Country = '{filters['Country']}'")
-
-        # Add WHERE clause if filters exist
-        if query_filters:
-            where_clause = " WHERE " + " AND ".join(query_filters)
-            sql_query_agg += where_clause
-            sql_query_filters += where_clause
-
-        # Add GROUP BY clause if provided
-        if group_by:
-            group_by_clause = " GROUP BY " + ", ".join(group_by)
-            sql_query_agg += group_by_clause
-
-        # Execute filter query
-        logger.info(f"Executing filter query: {sql_query_filters}")
-        cursor.execute(sql_query_filters)
-        filter_result = cursor.fetchall()
-
         # Execute aggregation query
-        logger.info(f"Executing aggregation query: {sql_query_agg}")
-        cursor.execute(sql_query_agg)
-        agg_result = cursor.fetchall()
+        query, params, group_columns = build_aggregation_query(filters, group_by)
+        logger.info(f"Executing aggregation query: {query}")
+        with sqlite3.connect(LOCAL_DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(query, params).fetchall()
 
-        # Close database connection
-        conn.close()
-
-        # Add aggregation results (single dictionary)
-        aggregations = {}
-        if agg_result and agg_result[0]:
-            aggregations = {
-                "Average Order Processing Time in days": agg_result[0][0],
-                "Average Gross Margin": agg_result[0][1],
-                "Average Units Sold": agg_result[0][2],
-                "Max Units Sold": agg_result[0][3],
-                "Min Units Sold": agg_result[0][4],
-                "Total Units Sold": agg_result[0][5],
-                "Total Revenue": agg_result[0][6],
-                "Total Profit": agg_result[0][7],
-                "Number of Orders": int(agg_result[0][8])
-            }
+        results = [format_aggregation(row, group_columns) for row in rows]
+        aggregations = results[0] if results else {}
 
         # Finalize runtime metrics
         inspector.inspectAllDeltas()
@@ -119,6 +132,8 @@ def lambda_handler(event, context):
             "statusCode": 200,
             "aggregations": aggregations
         }
+        if group_columns:
+            response["results"] = results
         response.update(runtime_metrics)  # Add runtime metrics to the top level
 
         logger.info(f"Response: {response}")

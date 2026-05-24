@@ -109,9 +109,13 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
         }
     }
 
-    private void transformFile(String inputPath, String outputPath) throws IOException {
+    public record TransformStats(int rowsWritten, int duplicateRows) {}
+
+    static TransformStats transformFile(String inputPath, String outputPath) throws IOException {
         Set<String> seenOrderIds = new HashSet<>();
         List<String> headers = null;
+        int rowsWritten = 0;
+        int duplicateRows = 0;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(inputPath), BUFFER_SIZE);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath), BUFFER_SIZE)) {
@@ -136,6 +140,7 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
 
                 String orderId = values[getColumnIndex(headers, "Order ID")];
                 if (seenOrderIds.contains(orderId)) {
+                    duplicateRows++;
                     continue;
                 }
                 seenOrderIds.add(orderId);
@@ -145,12 +150,14 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
                 if (transformedLine != null) {
                     writer.write(transformedLine);
                     writer.newLine();
+                    rowsWritten++;
                 }
             }
         }
+        return new TransformStats(rowsWritten, duplicateRows);
     }
 
-    private String transformRow(String[] values, List<String> headers) {
+    private static String transformRow(String[] values, List<String> headers) {
         try {
             StringBuilder sb = new StringBuilder();
 
@@ -188,7 +195,6 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
 
             return sb.toString();
         } catch (Exception e) {
-            logger.warning("Error transforming row: " + Arrays.toString(values));
             return null;
         }
     }
@@ -199,7 +205,7 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
         }
     }
 
-    private int getColumnIndex(List<String> headers, String columnName) {
+    private static int getColumnIndex(List<String> headers, String columnName) {
         return headers.indexOf(columnName);
     }
 
