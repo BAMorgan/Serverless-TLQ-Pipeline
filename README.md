@@ -2,9 +2,7 @@
 
 Cloud data engineering case study that benchmarks Java and Python AWS Lambda implementations of the same Transform-Load-Query sales analytics workflow, then turns the transformed data and runtime metrics into a Tableau dashboard.
 
-The project is designed as a resume-ready portfolio artifact: it shows serverless infrastructure, Lambda performance engineering, reproducible benchmarking, data transformation, SQL analytics, automated tests, and business-facing BI delivery in one repository.
-
-## Portfolio Highlights
+## Highlights
 
 | Area | What this project demonstrates |
 | --- | --- |
@@ -174,12 +172,6 @@ Benchmark outputs include:
 - `benchmark_results/callservice_summary_history.csv`
 - Legacy Java/Python CSV outputs for comparison with the original scripts
 
-## Portfolio Talking Points
-
-- Implemented a reproducible Java vs Python AWS Lambda benchmark for a 1.5M-row sales analytics workload under 256 MB memory constraints.
-- Provisioned disposable serverless infrastructure with AWS CDK, including S3, six Lambda functions, IAM permissions, and CloudWatch log groups.
-- Optimized transform/load/query stages with streaming CSV processing, duplicate detection, batched SQLite writes, parameterized SQL, and Lambda `/tmp` cleanup.
-- Built a Tableau dashboard that links business KPIs with cloud runtime and cost tradeoffs.
 
 ## Future Work
 
