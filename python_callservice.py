@@ -16,6 +16,7 @@ from scripts.callservice_runner import (
     print_config,
     print_iteration_metrics,
     print_summary,
+    require_bucket,
     resolve_backend,
     run_step,
     write_python_metrics,
@@ -44,6 +45,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
+        require_bucket(args)
         args.resolved_backend = resolve_backend(args.backend)
         input_file = f"{args.rows}SalesRecords.csv"
         print_config(args.rows, args.iterations, input_file)

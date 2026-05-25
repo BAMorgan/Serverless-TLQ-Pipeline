@@ -17,11 +17,10 @@ from statistics import mean, stdev
 from typing import Any, Iterable
 
 
-DEFAULT_BUCKET = "tcss462-term-project"
 DEFAULT_ROWS = 10000
 DEFAULT_ITERATIONS = 10
 DEFAULT_REGION = "us-west-2"
-DEFAULT_FUNCTION_PREFIX = "serverless-tlq-20260520"
+DEFAULT_FUNCTION_PREFIX = "serverless-tlq"
 
 
 @dataclass(frozen=True)
@@ -44,7 +43,7 @@ class PipelineResult:
 
 
 def add_common_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--bucket", default=os.environ.get("BUCKET_NAME", DEFAULT_BUCKET))
+    parser.add_argument("--bucket", default=os.environ.get("BUCKET_NAME"))
     parser.add_argument("--rows", type=int, default=DEFAULT_ROWS)
     parser.add_argument("--iterations", type=int, default=DEFAULT_ITERATIONS)
     parser.add_argument("--region", default=os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or DEFAULT_REGION)
@@ -70,7 +69,12 @@ def resolve_backend(preference: str) -> str:
         return "boto3"
     except RuntimeError:
         require_aws_cli()
-        return "awscli"
+    return "awscli"
+
+
+def require_bucket(args: argparse.Namespace) -> None:
+    if not args.bucket:
+        raise RuntimeError("Set BUCKET_NAME or pass --bucket with the pipeline S3 bucket name.")
 
 
 def require_boto3() -> None:

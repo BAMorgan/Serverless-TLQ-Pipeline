@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 public class Transform implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
     private static final AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
-    private static final String TRANSFORMED_CSV_BUCKET_NAME = "tcss462-term-project";
     private static final Logger logger = Logger.getLogger(Transform.class.getName());
     private static final int BUFFER_SIZE = 8192;
     private static final Map<String, String> PRIORITY_MAPPING = Map.of(
@@ -45,6 +44,7 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
             Map<String, String> body = extractBody(event);
             String bucketName = body.get("bucket_name");
             String fileKey = body.get("key");
+            String transformedBucketName = resolveTransformedBucketName(bucketName);
 
             inspector.addAttribute("bucket_name", bucketName);
             inspector.addAttribute("file_key", fileKey);
@@ -59,10 +59,10 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
 
             // Upload transformed file
             String transformedKey = "transformed_" + fileKey;
-            uploadToS3(localOutputPath, transformedKey);
+            uploadToS3(localOutputPath, transformedBucketName, transformedKey);
 
             // Add transformation attributes and prepare response
-            inspector.addAttribute("transformed_bucket", TRANSFORMED_CSV_BUCKET_NAME);
+            inspector.addAttribute("transformed_bucket", transformedBucketName);
             inspector.addAttribute("transformed_key", transformedKey);
 
             Response response = new Response();
@@ -199,9 +199,17 @@ public class Transform implements RequestHandler<Map<String, Object>, Map<String
         }
     }
 
-    private void uploadToS3(String localPath, String s3Key) throws IOException {
+    private static String resolveTransformedBucketName(String sourceBucketName) {
+        String configuredBucket = System.getenv("TRANSFORMED_CSV_BUCKET_NAME");
+        if (configuredBucket != null && !configuredBucket.isBlank()) {
+            return configuredBucket;
+        }
+        return sourceBucketName;
+    }
+
+    private void uploadToS3(String localPath, String bucketName, String s3Key) throws IOException {
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localPath), BUFFER_SIZE)) {
-            s3Client.putObject(new PutObjectRequest(TRANSFORMED_CSV_BUCKET_NAME, s3Key, bis, null));
+            s3Client.putObject(new PutObjectRequest(bucketName, s3Key, bis, null));
         }
     }
 

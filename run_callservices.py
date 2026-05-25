@@ -32,8 +32,7 @@ REPO_ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUTS_FILE = REPO_ROOT / "infrastructure" / "cdk" / "cdk-outputs.json"
 DEFAULT_STACK_NAME = "ServerlessTlqPipelineStack"
 DEFAULT_REGION = "us-west-2"
-DEFAULT_BUCKET = "tcss462-term-project"
-DEFAULT_PREFIX = "serverless-tlq-20260520"
+DEFAULT_PREFIX = "serverless-tlq"
 DEFAULT_ROWS = 10000
 DEFAULT_ITERATIONS = 10
 DEFAULT_MEMORY_MB = 256
@@ -163,7 +162,7 @@ def main() -> int:
         s3_client = session.client("s3", region_name=args.region, config=client_config)
 
         outputs = load_cdk_outputs(args.outputs_file, args.stack_name)
-        bucket = args.bucket or outputs.get("DataBucketName") or DEFAULT_BUCKET
+        bucket = resolve_bucket(args.bucket, outputs)
         functions = resolve_functions(outputs)
         languages = ["java", "python"] if args.language == "all" else [args.language]
         input_path = resolve_input_file(args.rows, args.input_file)
@@ -264,6 +263,16 @@ def resolve_functions(outputs: dict[str, str]) -> dict[str, FunctionSet]:
             query=outputs.get("PythonQueryFunctionName", f"{DEFAULT_PREFIX}-python-query"),
         ),
     }
+
+
+def resolve_bucket(explicit_bucket: str | None, outputs: dict[str, str]) -> str:
+    bucket = explicit_bucket or outputs.get("DataBucketName")
+    if bucket:
+        return bucket
+    raise RuntimeError(
+        "No S3 bucket configured. Pass --bucket, set BUCKET_NAME, or deploy CDK with "
+        "--outputs-file infrastructure/cdk/cdk-outputs.json."
+    )
 
 
 def resolve_input_file(rows: int, explicit_path: Path | None) -> Path:

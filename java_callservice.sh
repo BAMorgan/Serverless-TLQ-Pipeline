@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-BUCKET_NAME="tcss462-term-project"
+: "${BUCKET_NAME:?Set BUCKET_NAME to your pipeline S3 bucket}"
 NUM_ROWS=10000  # Variable for number of rows
 NUM_ITERATIONS=10
 OUTPUT_FILE="java_pipeline_metrics.csv"

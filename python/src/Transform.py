@@ -8,7 +8,6 @@ from Inspector import Inspector
 
 # Initialize AWS S3 client
 s3_client = boto3.client('s3')
-transformed_csv_bucket_name = "tcss462-term-project"
 
 # Configure logging
 logger = logging.getLogger()
@@ -35,6 +34,7 @@ def lambda_handler(event, context):
     # Extract S3 bucket and file key from the body
     bucket_name = body["bucket_name"]
     file_key = body["key"]
+    transformed_csv_bucket_name = resolve_transformed_bucket_name(bucket_name)
 
     # Download the file from S3
     local_file_path = '/tmp/' + file_key
@@ -67,6 +67,10 @@ def lambda_handler(event, context):
     response.update(runtime_metrics)
 
     return response
+
+
+def resolve_transformed_bucket_name(source_bucket_name):
+    return os.environ.get('TRANSFORMED_CSV_BUCKET_NAME') or source_bucket_name
 
 
 def transform(file_path, output_path=None):

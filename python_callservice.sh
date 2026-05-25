@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Configuration
+: "${BUCKET_NAME:?Set BUCKET_NAME to your pipeline S3 bucket}"
 NUM_ROWS=10000  # Number of rows
 dataset_size=$NUM_ROWS  # Adjust dataset size
 iterations=10     # Number of iterations
@@ -54,7 +55,7 @@ for ((iteration=1; iteration<=iterations; iteration++)); do
     echo "Running Transform function - iteration $iteration"
     transform_time=$(run_lambda "pythonTransform" '{
       "body": {
-        "bucket_name": "tcss462-term-project",
+        "bucket_name": "'"$BUCKET_NAME"'",
         "key": "'"$input_file"'"
       }
     }')
@@ -62,7 +63,7 @@ for ((iteration=1; iteration<=iterations; iteration++)); do
 
     echo "Running Load function - iteration $iteration"
     load_time=$(run_lambda "pythonLoad" '{
-      "bucket_name": "tcss462-term-project",
+      "bucket_name": "'"$BUCKET_NAME"'",
       "key": "transformed_'"$NUM_ROWS"'SalesRecords.csv",
       "db_file_name": "data.db"
     }')
@@ -70,7 +71,7 @@ for ((iteration=1; iteration<=iterations; iteration++)); do
 
     echo "Running Query function - iteration $iteration"
     query_time=$(run_lambda "pythonQuery" '{
-      "bucket_name": "tcss462-term-project",
+      "bucket_name": "'"$BUCKET_NAME"'",
       "key": "databases/data.db",
       "Filters": {
         "Region": "Sub-Saharan Africa"
